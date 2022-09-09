@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 const CANVAS_WIDTH = (canvas.width = 800);
 const CANVAS_HEIGHT = (canvas.height = 700);
 
-let gameSpeed = 15;
+let gameSpeed = 5;
 
 const backGroundLayer1 = new Image();
 backGroundLayer1.src = "./assets/layer-1.png";
@@ -17,23 +17,61 @@ backGroundLayer4.src = "./assets/layer-4.png";
 const backGroundLayer5 = new Image();
 backGroundLayer5.src = "./assets/layer-5.png";
 
-let x = 0;
-let x2 = 2400;
-const animate = () => {
-  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.drawImage(backGroundLayer4, x, 0);
-  ctx.drawImage(backGroundLayer4, x2, 0);
-  if (x < -2400) {
-    x = 2400;
-  } else {
-    x -= gameSpeed;
-  }
-  if (x2 < -2400) {
-    x2 = 2400;
-  } else {
-    x2 -= gameSpeed;
-  }
-  requestAnimationFrame(animate);
-};
+window.addEventListener("load", () => {
+  const slider = document.getElementById("slider");
+  slider.value = gameSpeed;
+  const showGameSpeed = document.getElementById("showGameSpeed");
+  showGameSpeed.innerHTML = gameSpeed;
+  slider.addEventListener("change", (e) => {
+    gameSpeed = e.target.value;
+    showGameSpeed.innerHTML = e.target.value;
+  });
 
-animate();
+  class Layer {
+    constructor(image, speedModifier) {
+      this.x = 0;
+      this.y = 0;
+      this.width = 2400;
+      this.height = 700;
+      this.x2 = this.width;
+      this.image = image;
+      this.speedModifier = speedModifier;
+      this.speed = gameSpeed * this.speedModifier;
+    }
+
+    update() {
+      this.speed = gameSpeed * this.speedModifier;
+      if (this.x <= -this.width) {
+        this.x = this.width + this.x2 - this.speed;
+      }
+      if (this.x2 <= -this.width) {
+        this.x2 = this.width + this.x - this.speed;
+      }
+      this.x = Math.floor(this.x - this.speed);
+      this.x2 = Math.floor(this.x2 - this.speed);
+    }
+    draw() {
+      ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+      ctx.drawImage(this.image, this.x2, this.y, this.width, this.height);
+    }
+  }
+
+  const layer1 = new Layer(backGroundLayer1, 0.2);
+  const layer2 = new Layer(backGroundLayer2, 0.4);
+  const layer3 = new Layer(backGroundLayer3, 0.6);
+  const layer4 = new Layer(backGroundLayer4, 0.8);
+  const layer5 = new Layer(backGroundLayer5, 1);
+
+  const gameObjetcs = [layer1, layer2, layer3, layer4, layer5];
+
+  const animate = () => {
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    gameObjetcs.forEach((objetc) => {
+      objetc.update();
+      objetc.draw();
+    });
+    requestAnimationFrame(animate);
+  };
+
+  animate();
+});
